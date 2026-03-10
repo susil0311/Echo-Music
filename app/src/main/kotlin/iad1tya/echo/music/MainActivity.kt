@@ -1419,11 +1419,11 @@ class MainActivity : ComponentActivity() {
                                                                         navController.navigate(screen.route) {
                                                                             popUpTo(navController.graph.id) {
                                                                                 saveState = true
-                                                                        }
-                                                                        launchSingleTop = true
-                                                                        restoreState = true
                                                                             }
-                                                                         }
+                                                                            launchSingleTop = true
+                                                                            restoreState = true
+                                                                        }
+                                                                    }
                                                                     } else {
                                                                         navController.navigate(screen.route) {
                                                                             popUpTo(navController.graph.id) {
