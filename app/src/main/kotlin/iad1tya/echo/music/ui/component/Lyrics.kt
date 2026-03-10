@@ -970,6 +970,7 @@ fun Lyrics(
                                     }
                                 } else if (isSynced && changeLyrics) {
                                     playerConnection.player.seekTo(item.time)
+                                    deferredCurrentLineIndex = index
                                     lastPreviewTime = 0L
                                 }
                             },
