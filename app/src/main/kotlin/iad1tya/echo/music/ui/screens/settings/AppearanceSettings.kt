@@ -631,11 +631,12 @@ fun AppearanceSettings(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     Slider(
-                        value = tempRadius,
-                        onValueChange = { tempRadius = it },
-                        valueRange = 0f..32f,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+             value = tempRadius,
+             onValueChange = { tempRadius = it },
+             valueRange = 0f..32f,
+             steps = 31,
+             modifier = Modifier.fillMaxWidth()
+                   )
                 }
             }
         }
