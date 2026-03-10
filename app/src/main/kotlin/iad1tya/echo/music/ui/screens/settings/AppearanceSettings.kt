@@ -910,12 +910,12 @@ fun AppearanceSettings(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     Slider(
-                        value = tempSpacing,
-                        onValueChange = { tempSpacing = it },
-                        valueRange = 1.0f..2.0f,
-                        steps = 9,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+            value = tempSpacing,
+            onValueChange = { tempSpacing = it },
+            valueRange = 1.0f..2.0f,
+            steps = 19,
+            modifier = Modifier.fillMaxWidth()
+                   )
                 }
             }
         }
