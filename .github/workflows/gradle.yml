@@ -2,9 +2,9 @@ name: Android Build
 
 on:
   push:
-    branches: [main, SK]
+    branches: [main, SK, Lyric-fix]
   pull_request:
-    branches: [main, SK]
+    branches: [main, SK, Lyric-fix]
 
 jobs:
   build:
