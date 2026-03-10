@@ -185,7 +185,7 @@ fun AppearanceSettings(
     val (lyricsClick, onLyricsClickChange) = rememberPreference(LyricsClickKey, defaultValue = true)
     val (lyricsScroll, onLyricsScrollChange) = rememberPreference(LyricsScrollKey, defaultValue = true)
     val (lyricsTextSize, onLyricsTextSizeChange) = rememberPreference(LyricsTextSizeKey, defaultValue = 20f)
-    val (lyricsLineSpacing, onLyricsLineSpacingChange) = rememberPreference(LyricsLineSpacingKey, defaultValue = 2f)
+    val (lyricsLineSpacing, onLyricsLineSpacingChange) = rememberPreference(LyricsLineSpacingKey, defaultValue = 1.3f)
     val (lyricsAnimationStyle, onLyricsAnimationStyleChange) = rememberEnumPreference(
         LyricsAnimationStyleKey, defaultValue = LyricsAnimationStyle.VIVIMUSIC_1
     )
@@ -836,15 +836,18 @@ fun AppearanceSettings(
                     .padding(horizontal = 16.dp, vertical = 14.dp)
             ) {
                 Text(
-                    text = "Lyrics line spacing: ${lyricsLineSpacing.toInt()}dp",
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Spacer(Modifier.height(4.dp))
-                androidx.compose.material3.Slider(
-                    value = lyricsLineSpacing,
-                    onValueChange = onLyricsLineSpacingChange,
-                    valueRange = 0f..24f,
-                )
+    text = "Lyrics line spacing: ${"%.1f".format(lyricsLineSpacing)}x",
+    style = MaterialTheme.typography.titleMedium,
+)
+Spacer(Modifier.height(4.dp))
+androidx.compose.material3.Slider(
+    value = lyricsLineSpacing,
+    onValueChange = { 
+        onLyricsLineSpacingChange((it * 10).roundToInt() / 10f)
+    },
+    valueRange = 1.0f..2.0f,
+    steps = 9,
+)
             }
         }
 
