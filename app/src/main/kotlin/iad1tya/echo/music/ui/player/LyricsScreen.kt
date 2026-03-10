@@ -713,7 +713,7 @@ fun LyricsScreen(
                         contentAlignment = Alignment.TopCenter
                     ) {
                         Lyrics(
-                            sliderPositionProvider = { sliderPosition },
+                            sliderPositionProvider = { sliderPosition ?: playerConnection.player.currentPosition },
                             isVisible = isVisible,
                             palette = gradientColors
                         )
