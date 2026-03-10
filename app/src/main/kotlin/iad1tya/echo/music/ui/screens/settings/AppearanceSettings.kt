@@ -854,11 +854,12 @@ fun AppearanceSettings(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     Slider(
-                        value = tempSize,
-                        onValueChange = { tempSize = it },
-                        valueRange = 12f..40f,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+    value = tempSize,
+    onValueChange = { tempSize = it },
+    valueRange = 16f..36f,
+    steps = 19,
+    modifier = Modifier.fillMaxWidth()
+)
                 }
             }
         }
@@ -903,7 +904,7 @@ fun AppearanceSettings(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     Text(
-                        text = "${"%.1f".format((lyricsLineSpacing * 10).toInt() / 10f)}x",
+                        text = "${"%.1f".format((tempSpacing * 10).toInt() / 10f)}x",
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
