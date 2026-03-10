@@ -592,34 +592,59 @@ fun AppearanceSettings(
             onCheckedChange = onCropAlbumArtChange,
         )
 
-        // Thumbnail corner radius slider
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp)
+        // Thumbnail corner radius - dialog style
+        var showThumbnailRadiusDialog by rememberSaveable { mutableStateOf(false) }
+        if (showThumbnailRadiusDialog) {
+            var tempRadius by remember { mutableFloatStateOf(thumbnailCornerRadius) }
+            DefaultDialog(
+                onDismiss = {
+                    tempRadius = thumbnailCornerRadius
+                    showThumbnailRadiusDialog = false
+                },
+                buttons = {
+                    TextButton(onClick = { tempRadius = 3f }) {
+                        Text(stringResource(R.string.reset))
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextButton(onClick = {
+                        tempRadius = thumbnailCornerRadius
+                        showThumbnailRadiusDialog = false
+                    }) { Text(stringResource(android.R.string.cancel)) }
+                    TextButton(onClick = {
+                        onThumbnailCornerRadiusChange(tempRadius)
+                        showThumbnailRadiusDialog = false
+                    }) { Text(stringResource(android.R.string.ok)) }
+                }
             ) {
-                Text(
-                    text = "Thumbnail corner radius: ${thumbnailCornerRadius.roundToInt()}dp",
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Spacer(Modifier.height(4.dp))
-                androidx.compose.material3.Slider(
-                    value = thumbnailCornerRadius,
-                    onValueChange = onThumbnailCornerRadiusChange,
-                    valueRange = 0f..32f,
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Thumbnail Corner Radius",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Text(
+                        text = "${tempRadius.roundToInt()}dp",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Slider(
+                        value = tempRadius,
+                        onValueChange = { tempRadius = it },
+                        valueRange = 0f..32f,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
+        PreferenceEntry(
+            title = { Text("Thumbnail Corner Radius") },
+            description = "${thumbnailCornerRadius.roundToInt()}dp",
+            icon = { Icon(painterResource(R.drawable.insert_photo), null) },
+            onClick = { showThumbnailRadiusDialog = true }
+        )
 
         SwitchPreference(
             title = { Text("Canvas Animation") },
@@ -790,34 +815,59 @@ fun AppearanceSettings(
             )
         }
 
-        // Lyrics text size slider
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp)
+        // Lyrics text size - dialog style
+        var showLyricsTextSizeDialog by rememberSaveable { mutableStateOf(false) }
+        if (showLyricsTextSizeDialog) {
+            var tempSize by remember { mutableFloatStateOf(lyricsTextSize) }
+            DefaultDialog(
+                onDismiss = {
+                    tempSize = lyricsTextSize
+                    showLyricsTextSizeDialog = false
+                },
+                buttons = {
+                    TextButton(onClick = { tempSize = 20f }) {
+                        Text(stringResource(R.string.reset))
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextButton(onClick = {
+                        tempSize = lyricsTextSize
+                        showLyricsTextSizeDialog = false
+                    }) { Text(stringResource(android.R.string.cancel)) }
+                    TextButton(onClick = {
+                        onLyricsTextSizeChange(tempSize)
+                        showLyricsTextSizeDialog = false
+                    }) { Text(stringResource(android.R.string.ok)) }
+                }
             ) {
-                Text(
-                    text = "Lyrics text size: ${lyricsTextSize.toInt()}sp",
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Spacer(Modifier.height(4.dp))
-                androidx.compose.material3.Slider(
-                    value = lyricsTextSize,
-                    onValueChange = onLyricsTextSizeChange,
-                    valueRange = 12f..40f,
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Lyrics Text Size",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Text(
+                        text = "${tempSize.roundToInt()}sp",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Slider(
+                        value = tempSize,
+                        onValueChange = { tempSize = it },
+                        valueRange = 12f..40f,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
+        PreferenceEntry(
+            title = { Text("Lyrics Text Size") },
+            description = "${lyricsTextSize.roundToInt()}sp",
+            icon = { Icon(painterResource(R.drawable.lyrics), null) },
+            onClick = { showLyricsTextSizeDialog = true }
+        )
 
         // Lyrics line spacing slider
         Card(
