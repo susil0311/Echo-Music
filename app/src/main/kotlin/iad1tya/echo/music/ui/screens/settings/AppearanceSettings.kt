@@ -602,7 +602,7 @@ fun AppearanceSettings(
                     showThumbnailRadiusDialog = false
                 },
                 buttons = {
-                    TextButton(onClick = { tempRadius = 3f }) {
+                    TextButton(onClick = { tempRadius = 10f }) {
                         Text(stringResource(R.string.reset))
                     }
                     Spacer(modifier = Modifier.weight(1f))
@@ -825,7 +825,7 @@ fun AppearanceSettings(
                     showLyricsTextSizeDialog = false
                 },
                 buttons = {
-                    TextButton(onClick = { tempSize = 20f }) {
+                    TextButton(onClick = { tempSize = 23f }) {
                         Text(stringResource(R.string.reset))
                     }
                     Spacer(modifier = Modifier.weight(1f))
@@ -869,37 +869,60 @@ fun AppearanceSettings(
             onClick = { showLyricsTextSizeDialog = true }
         )
 
-        // Lyrics line spacing slider
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp)
+        // Lyrics line spacing - dialog style
+        var showSpacingDialog by rememberSaveable { mutableStateOf(false) }
+        if (showSpacingDialog) {
+            var tempSpacing by remember { mutableFloatStateOf(lyricsLineSpacing) }
+            DefaultDialog(
+                onDismiss = {
+                    tempSpacing = lyricsLineSpacing
+                    showSpacingDialog = false
+                },
+                buttons = {
+                    TextButton(onClick = { tempSpacing = 1.35f }) {
+                        Text(stringResource(R.string.reset))
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextButton(onClick = {
+                        tempSpacing = lyricsLineSpacing
+                        showSpacingDialog = false
+                    }) { Text(stringResource(android.R.string.cancel)) }
+                    TextButton(onClick = {
+                        onLyricsLineSpacingChange(tempSpacing)
+                        showSpacingDialog = false
+                    }) { Text(stringResource(android.R.string.ok)) }
+                }
             ) {
-                Text(
-    text = "Lyrics line spacing: ${"%.1f".format(lyricsLineSpacing)}x",
-    style = MaterialTheme.typography.titleMedium,
-)
-Spacer(Modifier.height(4.dp))
-androidx.compose.material3.Slider(
-    value = lyricsLineSpacing,
-    onValueChange = { 
-        onLyricsLineSpacingChange((it * 10).roundToInt() / 10f)
-    },
-    valueRange = 1.0f..2.0f,
-    steps = 9,
-)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Lyrics Line Spacing",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Text(
+                        text = "${"%.1f".format((lyricsLineSpacing * 10).toInt() / 10f)}x",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Slider(
+                        value = tempSpacing,
+                        onValueChange = { tempSpacing = it },
+                        valueRange = 1.0f..2.0f,
+                        steps = 9,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
+        PreferenceEntry(
+            title = { Text("Lyrics Line Spacing") },
+            description = "${"%.1f".format((lyricsLineSpacing * 10).toInt() / 10f)}x",
+            icon = { Icon(painterResource(R.drawable.lyrics), null) },
+            onClick = { showSpacingDialog = true }
+        )
 
         PreferenceGroupTitle(
             title = stringResource(R.string.misc),
