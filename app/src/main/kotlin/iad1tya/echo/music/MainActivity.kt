@@ -1426,7 +1426,6 @@ class MainActivity : ComponentActivity() {
                                                                             launchSingleTop = true
                                                                             restoreState = true
                                                                         }
-                                                                    }
                                                                     } else {
                                                                         navController.navigate(screen.route) {
                                                                             popUpTo(navController.graph.id) {
