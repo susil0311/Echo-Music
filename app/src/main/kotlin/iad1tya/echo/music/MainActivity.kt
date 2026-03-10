@@ -1421,9 +1421,12 @@ class MainActivity : ComponentActivity() {
                                                                     if (screen.route == Screens.Home.route) {
                                                                         navController.navigate(screen.route) {
                                                                             popUpTo(navController.graph.id) {
-                                                                                inclusive = true
-                                                                            }
+                                                                                saveState = true
                                                                         }
+                                                                        launchSingleTop = true
+                                                                        restoreState = true
+                                                                            }
+                                                                         }
                                                                     } else {
                                                                         navController.navigate(screen.route) {
                                                                             popUpTo(navController.graph.id) {
