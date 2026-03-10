@@ -1099,42 +1099,39 @@ fun Lyrics(
                                         with(LocalDensity.current) { (lyricsTextSize * (lyricsLineSpacing - 1f)).sp.toDp() }
                                     )
                                 ) {
-                                    wordData.forEachIndexed { wordIndex, (wordText, startRelative, endRelative) ->
-                                        val wordDuration = (endRelative - startRelative).coerceAtLeast(1L)
-                                        
-                                        val progress by animateFloatAsState(
-                                            targetValue = when {
-                                                lineRelTime >= endRelative -> 1f
-                                                lineRelTime < startRelative -> 0f
-                                                else -> (lineRelTime - startRelative).toFloat() / wordDuration
-                                            },
-                                            animationSpec = tween(durationMillis = 150, easing = androidx.compose.animation.core.LinearEasing),
-                                            label = "wordProgress"
-                                        )
-
-                                        val finalFontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.Bold
-
-                                        Text(
-                                            text = wordText,
-                                            fontSize = lyricsTextSize.sp,
-                                            style = TextStyle(
-                                                brush = if (isActive) Brush.horizontalGradient(
-                                                    0.0f to currentTextColor,
-                                                    (progress - 0.05f).coerceAtLeast(0f) to currentTextColor,
-                                                    (progress + 0.05f).coerceAtMost(1f) to currentTextColor.copy(alpha = 0.45f),
-                                                    1.0f to currentTextColor.copy(alpha = 0.45f)
-                                                ) else null,
-                                                fontWeight = finalFontWeight,
-                                                lineHeight = (lyricsTextSize * lyricsLineSpacing).sp,
-                                                textAlign = textAlignment,
-                                                shadow = if (isActive && (lyricsGlowEffect || progress > 0.1f)) Shadow(
-                                                    color = currentTextColor.copy(alpha = 0.6f * progress),
-                                                    offset = Offset.Zero,
-                                                    blurRadius = (12f * progress).coerceAtLeast(0.1f)
-                                                ) else null
-                                            ),
-                                            color = if (!isActive) currentTextColor else Color.Unspecified
-                                        )
+                                    wordData.forEach { (wordText, startRelative, endRelative) ->
+    val wordDuration = (endRelative - startRelative).coerceAtLeast(1L)
+    val targetProgress = when {
+        lineRelTime >= endRelative -> 1f
+        lineRelTime < startRelative -> 0f
+        else -> (lineRelTime - startRelative).toFloat() / wordDuration
+    }
+    val progress by animateFloatAsState(
+        targetValue = if (isActive) targetProgress else 0f,
+        animationSpec = tween(durationMillis = 200, easing = androidx.compose.animation.core.LinearEasing),
+        label = "wordProgress"
+    )
+    Text(
+        text = wordText,
+        fontSize = lyricsTextSize.sp,
+        style = TextStyle(
+            brush = if (isActive) Brush.horizontalGradient(
+                0.0f to currentTextColor,
+                (progress - 0.05f).coerceAtLeast(0f) to currentTextColor,
+                (progress + 0.05f).coerceAtMost(1f) to currentTextColor.copy(alpha = 0.45f),
+                1.0f to currentTextColor.copy(alpha = 0.45f)
+            ) else null,
+            fontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.Bold,
+            lineHeight = (lyricsTextSize * lyricsLineSpacing).sp,
+            textAlign = textAlignment,
+            shadow = if (isActive && (lyricsGlowEffect || progress > 0.1f)) Shadow(
+                color = currentTextColor.copy(alpha = 0.6f * progress),
+                offset = Offset.Zero,
+                blurRadius = (12f * progress).coerceAtLeast(0.1f)
+            ) else null
+        ),
+        color = if (!isActive) currentTextColor else Color.Unspecified
+    )
                                     }
                                 }
                             }
