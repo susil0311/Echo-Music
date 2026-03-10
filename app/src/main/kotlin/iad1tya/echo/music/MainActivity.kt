@@ -877,8 +877,11 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    val shouldShowTopBar = remember(navBackStackEntry, active) {
-                        !active && navBackStackEntry?.destination?.route in topLevelScreens && navBackStackEntry?.destination?.route != "settings"
+                    var shouldShowTopBar by rememberSaveable { mutableStateOf(false) }
+
+                    LaunchedEffect(navBackStackEntry, active) {
+                        shouldShowTopBar =
+                            !active && navBackStackEntry?.destination?.route in topLevelScreens && navBackStackEntry?.destination?.route != "settings"
                     }
 
                     val coroutineScope = rememberCoroutineScope()
