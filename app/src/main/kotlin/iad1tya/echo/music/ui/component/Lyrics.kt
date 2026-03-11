@@ -114,6 +114,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.withFrameMillis
 import coil3.toBitmap
 import iad1tya.echo.music.LocalPlayerConnection
 import iad1tya.echo.music.R
@@ -677,22 +679,20 @@ fun Lyrics(
     }
 
     LaunchedEffect(lyrics) {
-        if (lyrics.isNullOrEmpty() || !lyrics.startsWith("[")) {
-            currentLineIndex = -1
-            return@LaunchedEffect
-        }
-        while (isActive) {
-            delay(50)
+    if (lyrics.isNullOrEmpty() || !lyrics.startsWith("[")) {
+        currentLineIndex = -1
+        return@LaunchedEffect
+    }
+    while (isActive) {
+        withFrameMillis {
             val sliderPosition = sliderPositionProvider()
             isSeeking = sliderPosition != null
             val position = sliderPosition ?: playerConnection.player.currentPosition
             currentPlaybackPosition = position
-            currentLineIndex = findCurrentLineIndex(
-                lines,
-                position
-            )
+            currentLineIndex = findCurrentLineIndex(lines, position)
         }
     }
+}
 
     // When the playback slider is being dragged, always follow the seek position live
     LaunchedEffect(isSeeking) {
