@@ -177,7 +177,7 @@ import iad1tya.echo.music.constants.TranslateLanguageKey
 import iad1tya.echo.music.constants.AiProviderKey
 import iad1tya.echo.music.lyrics.LanguageDetectionHelper
 import java.util.Locale
-
+ 
 @RequiresApi(Build.VERSION_CODES.M)
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedBoxWithConstraintsScope", "StringFormatInvalid")
