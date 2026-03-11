@@ -691,7 +691,6 @@ fun Lyrics(
             currentPlaybackPosition = position
             currentLineIndex = findCurrentLineIndex(lines, position)
         }
-    }
 }
     }
 
