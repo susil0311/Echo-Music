@@ -68,6 +68,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.CircularProgressIndicator
@@ -677,21 +679,20 @@ fun Lyrics(
     }
 
     LaunchedEffect(lyrics) {
-        if (lyrics.isNullOrEmpty() || !lyrics.startsWith("[")) {
-            currentLineIndex = -1
-            return@LaunchedEffect
-        }
-        while (isActive) {
-            delay(8)
+    if (lyrics.isNullOrEmpty() || !lyrics.startsWith("[")) {
+        currentLineIndex = -1
+        return@LaunchedEffect
+    }
+    while (isActive) {
+        withFrameMillis {
             val sliderPosition = sliderPositionProvider()
             isSeeking = sliderPosition != null
             val position = sliderPosition ?: playerConnection.player.currentPosition
             currentPlaybackPosition = position
-            currentLineIndex = findCurrentLineIndex(
-                lines,
-                position
-            )
+            currentLineIndex = findCurrentLineIndex(lines, position)
         }
+    }
+}
     }
 
     // When the playback slider is being dragged, always follow the seek position live
