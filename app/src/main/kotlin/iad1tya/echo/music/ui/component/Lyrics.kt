@@ -1699,6 +1699,7 @@ fun Lyrics(
         }
     }
 }
+}
 
 
 private const val METROLIST_AUTO_SCROLL_DURATION = 1500L // Much slower auto-scroll for smooth transitions
