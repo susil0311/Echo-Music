@@ -68,8 +68,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.CircularProgressIndicator
@@ -148,6 +146,253 @@ import iad1tya.echo.music.lyrics.LyricsUtils.isJapanese
 import iad1tya.echo.music.lyrics.LyricsUtils.isKorean
 import iad1tya.echo.music.lyrics.LyricsUtils.isKyrgyz
 import iad1tya.echo.music.lyrics.LyricsUtils.isRussian
+import iad1tya.echo.music.lyrics.LyricsUtils.isSerbian
+import iad1tya.echo.music.lyrics.LyricsUtils.isBulgarian
+import iad1tya.echo.music.lyrics.LyricsUtils.isUkrainian
+import iad1tya.echo.music.lyrics.LyricsUtils.isMacedonian
+import iad1tya.echo.music.lyrics.LyricsUtils.parseLyrics
+import iad1tya.echo.music.lyrics.LyricsUtils.romanizeCyrillic
+import iad1tya.echo.music.lyrics.LyricsUtils.romanizeJapanese
+import iad1tya.echo.music.lyrics.LyricsUtils.romanizeKorean
+import iad1tya.echo.music.ui.component.shimmer.ShimmerHost
+import iad1tya.echo.music.ui.component.shimmer.TextPlaceholder
+import iad1tya.echo.music.ui.screens.settings.DarkMode
+import iad1tya.echo.music.ui.screens.settings.LyricsPosition
+import iad1tya.echo.music.ui.utils.fadingEdge
+import iad1tya.echo.music.utils.ComposeToImage
+import iad1tya.echo.music.utils.rememberEnumPreference
+import iad1tya.echo.music.utils.rememberPreference
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.seconds
+import iad1tya.echo.music.constants.OpenRouterApiKey
+import iad1tya.echo.music.constants.OpenRouterBaseUrlKey
+import iad1tya.echo.music.constants.OpenRouterModelKey
+import iad1tya.echo.music.constants.AutoTranslateLyricsKey
+import iad1tya.echo.music.constants.AutoTranslateLyricsMismatchKey
+import iad1tya.echo.music.constants.TranslateLanguageKey
+import iad1tya.echo.music.constants.AiProviderKey
+import iad1tya.echo.music.lyrics.LanguageDetectionHelper
+import java.util.Locale
+
+@RequiresApi(Build.VERSION_CODES.M)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@SuppressLint("UnusedBoxWithConstraintsScope", "StringFormatInvalid")
+@Composable
+fun Lyrics(
+    sliderPositionProvider: () -> Long?,
+    modifier: Modifier = Modifier,
+    isVisible: Boolean = true,
+    palette: List<Color> = emptyList(),
+) {
+    val playerConnection = LocalPlayerConnection.current ?: return
+    val menuState = LocalMenuState.current
+    val density = LocalDensity.current
+    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+    val configuration = LocalConfiguration.current // Get configuration
+
+    val landscapeOffset =
+        configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    val lyricsTextPosition by rememberEnumPreference(LyricsTextPositionKey, LyricsPosition.CENTER)
+    val changeLyrics by rememberPreference(LyricsClickKey, true)
+    val scrollLyrics by rememberPreference(LyricsScrollKey, true)
+    val romanizeJapaneseLyrics by rememberPreference(LyricsRomanizeJapaneseKey, true)
+    val romanizeKoreanLyrics by rememberPreference(LyricsRomanizeKoreanKey, true)
+    val romanizeRussianLyrics by rememberPreference(LyricsRomanizeRussianKey, true)
+    val romanizeUkrainianLyrics by rememberPreference(LyricsRomanizeUkrainianKey, true)
+    val romanizeSerbianLyrics by rememberPreference(LyricsRomanizeSerbianKey, true)
+    val romanizeBulgarianLyrics by rememberPreference(LyricsRomanizeBulgarianKey, true)
+    val romanizeBelarusianLyrics by rememberPreference(LyricsRomanizeBelarusianKey, true)
+    val romanizeKyrgyzLyrics by rememberPreference(LyricsRomanizeKyrgyzKey, true)
+    val romanizeMacedonianLyrics by rememberPreference(LyricsRomanizeMacedonianKey, true)
+    val romanizeCyrillicByLine by rememberPreference(LyricsRomanizeCyrillicByLineKey, false)
+    
+    val openRouterApiKey by rememberPreference(OpenRouterApiKey, "")
+    val openRouterBaseUrl by rememberPreference(OpenRouterBaseUrlKey, "https://openrouter.ai/api/v1/chat/completions")
+    val openRouterModel by rememberPreference(OpenRouterModelKey, "mistralai/mistral-small-3.1-24b-instruct:free")
+    val autoTranslateLyrics by rememberPreference(AutoTranslateLyricsKey, false)
+    val autoTranslateLyricsMismatch by rememberPreference(AutoTranslateLyricsMismatchKey, false)
+    val translateLanguage by rememberPreference(TranslateLanguageKey, "en")
+    val translateMode by rememberPreference(iad1tya.echo.music.constants.TranslateModeKey, "Literal")
+    val aiProvider by rememberPreference(AiProviderKey, "OpenRouter")
+    
+    val lyricsTextSize by rememberPreference(iad1tya.echo.music.constants.LyricsTextSizeKey, 20f)
+    val lyricsLineSpacing by rememberPreference(iad1tya.echo.music.constants.LyricsLineSpacingKey, 1.3f)
+    val lyricsAnimationStyle by rememberEnumPreference(LyricsAnimationStyleKey, LyricsAnimationStyle.VIVIMUSIC_1)
+    val lyricsGlowEffect by rememberPreference(LyricsGlowEffectKey, false)
+    val appleMusicLyricsBlur by rememberPreference(AppleMusicLyricsBlurKey, true)
+    
+    val scope = rememberCoroutineScope()
+
+    val mediaMetadata by playerConnection.mediaMetadata.collectAsState()
+    val lyricsEntity by playerConnection.currentLyrics.collectAsState(initial = null)
+    val currentSong by playerConnection.currentSong.collectAsState(initial = null)
+    val lyrics = remember(lyricsEntity) { lyricsEntity?.lyrics?.trim() }
+
+    val playerBackground by rememberEnumPreference(
+        key = PlayerBackgroundStyleKey,
+        defaultValue = PlayerBackgroundStyle.BLUR
+    )
+
+    val darkTheme by rememberEnumPreference(DarkModeKey, defaultValue = DarkMode.AUTO)
+    val isSystemInDarkTheme = isSystemInDarkTheme()
+    val useDarkTheme = remember(darkTheme, isSystemInDarkTheme) {
+        if (darkTheme == DarkMode.AUTO) isSystemInDarkTheme else darkTheme == DarkMode.ON
+    }
+
+    val lines = remember(lyrics, scope) {
+        if (lyrics == null || lyrics == LYRICS_NOT_FOUND) {
+            emptyList()
+        } else if (lyrics.startsWith("[")) {
+            val parsedLines = parseLyrics(lyrics)
+
+            val isRussianLyrics = romanizeRussianLyrics && !romanizeCyrillicByLine && isRussian(lyrics)
+            val isUkrainianLyrics = romanizeUkrainianLyrics && !romanizeCyrillicByLine && isUkrainian(lyrics)
+            val isSerbianLyrics = romanizeSerbianLyrics && !romanizeCyrillicByLine && isSerbian(lyrics)
+            val isBulgarianLyrics = romanizeBulgarianLyrics && !romanizeCyrillicByLine && isBulgarian(lyrics)
+            val isBelarusianLyrics = romanizeBelarusianLyrics && !romanizeCyrillicByLine && isBelarusian(lyrics)
+            val isKyrgyzLyrics = romanizeKyrgyzLyrics && !romanizeCyrillicByLine && isKyrgyz(lyrics)
+            val isMacedonianLyrics = romanizeMacedonianLyrics && !romanizeCyrillicByLine && isMacedonian(lyrics)
+
+            parsedLines.map { entry ->
+                val newEntry = LyricsEntry(entry.time, entry.text)
+                
+                if (romanizeJapaneseLyrics && isJapanese(entry.text) && !isChinese(entry.text)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeJapanese(entry.text)
+                    }
+                }
+
+                if (romanizeKoreanLyrics && isKorean(entry.text)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeKorean(entry.text)
+                    }
+                }
+
+                if (romanizeRussianLyrics && (if (romanizeCyrillicByLine) isRussian(entry.text) else isRussianLyrics)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeCyrillic(entry.text)
+                    }
+                }
+
+                else if (romanizeUkrainianLyrics && (if (romanizeCyrillicByLine) isUkrainian(entry.text) else isUkrainianLyrics)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeCyrillic(entry.text)
+                    }
+                }
+
+                else if (romanizeSerbianLyrics && (if (romanizeCyrillicByLine) isSerbian(entry.text) else isSerbianLyrics)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeCyrillic(entry.text)
+                    }
+                }
+
+                else if (romanizeBulgarianLyrics && (if (romanizeCyrillicByLine) isBulgarian(entry.text) else isBulgarianLyrics)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeCyrillic(entry.text)
+                    }
+                }
+
+                else if (romanizeBelarusianLyrics && (if (romanizeCyrillicByLine) isBelarusian(entry.text) else isBelarusianLyrics)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeCyrillic(entry.text)
+                    }
+                }
+
+                else if (romanizeKyrgyzLyrics && (if (romanizeCyrillicByLine) isKyrgyz(entry.text) else isKyrgyzLyrics)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeCyrillic(entry.text)
+                    }
+                }
+
+                else if (romanizeMacedonianLyrics && (if (romanizeCyrillicByLine) isMacedonian(entry.text) else isMacedonianLyrics)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeCyrillic(entry.text)
+                    }
+                }
+
+                newEntry
+            }.let {
+                listOf(LyricsEntry.HEAD_LYRICS_ENTRY) + it
+            }
+        } else {
+            val isRussianLyrics = romanizeRussianLyrics && !romanizeCyrillicByLine && isRussian(lyrics)
+            val isUkrainianLyrics = romanizeUkrainianLyrics && !romanizeCyrillicByLine && isUkrainian(lyrics)
+            val isSerbianLyrics = romanizeSerbianLyrics && !romanizeCyrillicByLine && isSerbian(lyrics)
+            val isBulgarianLyrics = romanizeBulgarianLyrics && !romanizeCyrillicByLine && isBulgarian(lyrics)
+            val isBelarusianLyrics = romanizeBelarusianLyrics && !romanizeCyrillicByLine && isBelarusian(lyrics)
+            val isKyrgyzLyrics = romanizeKyrgyzLyrics && !romanizeCyrillicByLine && isKyrgyz(lyrics)
+            val isMacedonianLyrics = romanizeMacedonianLyrics && !romanizeCyrillicByLine && isMacedonian(lyrics)
+
+            lyrics.lines().mapIndexed { index, line ->
+                val newEntry = LyricsEntry(index * 100L, line)
+
+                if (romanizeJapaneseLyrics && isJapanese(line) && !isChinese(line)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeJapanese(line)
+                    }
+                }
+
+                if (romanizeKoreanLyrics && isKorean(line)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeKorean(line)
+                    }
+                }
+
+                if (romanizeRussianLyrics && (if (romanizeCyrillicByLine) isRussian(line) else isRussianLyrics)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeCyrillic(line)
+                    }
+                }
+
+                else if (romanizeUkrainianLyrics && (if (romanizeCyrillicByLine) isUkrainian(line) else isUkrainianLyrics)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeCyrillic(line)
+                    }
+                }
+
+                else if (romanizeSerbianLyrics && (if (romanizeCyrillicByLine) isSerbian(line) else isSerbianLyrics)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeCyrillic(line)
+                    }
+                }
+
+                else if (romanizeBulgarianLyrics && (if (romanizeCyrillicByLine) isBulgarian(line) else isBulgarianLyrics)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeCyrillic(line)
+                    }
+                }
+
+                else if (romanizeBelarusianLyrics && (if (romanizeCyrillicByLine) isBelarusian(line) else isBelarusianLyrics)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeCyrillic(line)
+                    }
+                }
+
+                else if (romanizeKyrgyzLyrics && (if (romanizeCyrillicByLine) isKyrgyz(line) else isKyrgyzLyrics)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeCyrillic(line)
+                    }
+                }
+
+                else if (romanizeMacedonianLyrics && (if (romanizeCyrillicByLine) isMacedonian(line) else isMacedonianLyrics)) {
+                    scope.launch {
+                        newEntry.romanizedTextFlow.value = romanizeCyrillic(line)
+                    }
+                }
+
+                newEntry
+            }
+        }
+    }
+    
+    // State for translation status
+    val translationimport iad1tya.echo.music.lyrics.LyricsUtils.isRussian
 import iad1tya.echo.music.lyrics.LyricsUtils.isSerbian
 import iad1tya.echo.music.lyrics.LyricsUtils.isBulgarian
 import iad1tya.echo.music.lyrics.LyricsUtils.isUkrainian
