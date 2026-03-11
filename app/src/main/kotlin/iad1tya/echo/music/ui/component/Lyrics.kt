@@ -693,7 +693,6 @@ fun Lyrics(
         }
     }
     }
-    }
 
     // When the playback slider is being dragged, always follow the seek position live
     LaunchedEffect(isSeeking) {
