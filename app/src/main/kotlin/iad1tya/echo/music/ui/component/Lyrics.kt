@@ -684,13 +684,15 @@ fun Lyrics(
         return@LaunchedEffect
     }
     while (isActive) {
-        withFrameMillis {
+            delay(50)
             val sliderPosition = sliderPositionProvider()
             isSeeking = sliderPosition != null
             val position = sliderPosition ?: playerConnection.player.currentPosition
             currentPlaybackPosition = position
-            currentLineIndex = findCurrentLineIndex(lines, position)
-        }
+            currentLineIndex = findCurrentLineIndex(
+                lines,
+                position
+            )
     }
 
     // When the playback slider is being dragged, always follow the seek position live
