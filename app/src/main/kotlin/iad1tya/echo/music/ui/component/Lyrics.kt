@@ -68,6 +68,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.CircularProgressIndicator
@@ -677,12 +679,12 @@ fun Lyrics(
     }
 
     LaunchedEffect(lyrics) {
-        if (lyrics.isNullOrEmpty() || !lyrics.startsWith("[")) {
-            currentLineIndex = -1
-            return@LaunchedEffect
-        }
-        while (isActive) {
-            delay(8)
+    if (lyrics.isNullOrEmpty() || !lyrics.startsWith("[")) {
+        currentLineIndex = -1
+        return@LaunchedEffect
+    }
+    while (isActive) {
+            delay(50)
             val sliderPosition = sliderPositionProvider()
             isSeeking = sliderPosition != null
             val position = sliderPosition ?: playerConnection.player.currentPosition
@@ -691,7 +693,6 @@ fun Lyrics(
                 lines,
                 position
             )
-        }
     }
 
     // When the playback slider is being dragged, always follow the seek position live
@@ -1664,12 +1665,13 @@ fun Lyrics(
                         )
                     }
                 }
-            }
+            )
         }
+    }
     }
 
     if (showImageCustomizationDialog && shareDialogData != null) {
-        val (lyricsText, _, _) = shareDialogData!!
+        val lyricsText = shareDialogData!!.component1()
         mediaMetadata?.let { metadata ->
             LyricsShareDialog(
                 mediaMetadata = metadata,
@@ -1696,12 +1698,10 @@ fun Lyrics(
                 }
             )
         }
-
-
     }
 }
 }
-
+}
 private const val METROLIST_AUTO_SCROLL_DURATION = 1500L // Much slower auto-scroll for smooth transitions
 private const val METROLIST_INITIAL_SCROLL_DURATION = 1000L // Slower initial positioning
 private const val METROLIST_SEEK_DURATION = 800L // Slower user interaction
