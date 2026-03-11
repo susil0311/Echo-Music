@@ -1670,7 +1670,7 @@ fun Lyrics(
     }
 
     if (showImageCustomizationDialog && shareDialogData != null) {
-        val (lyricsText, _, _) = shareDialogData!!
+        val lyricsText = shareDialogData!!.first
         mediaMetadata?.let { metadata ->
             LyricsShareDialog(
                 mediaMetadata = metadata,
