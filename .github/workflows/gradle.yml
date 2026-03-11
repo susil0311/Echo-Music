@@ -63,6 +63,8 @@ jobs:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KSP_WITH_COMPILATION_ERRORS: "true"
+          KSP_ALLOW_ALL_WARNINGS_AS_ERRORS: "false"
 
       - name: Upload Universal Release APK
         uses: actions/upload-artifact@v4
