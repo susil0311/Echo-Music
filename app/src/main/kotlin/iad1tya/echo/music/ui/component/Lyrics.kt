@@ -1700,7 +1700,7 @@ fun Lyrics(
         }
     }
 }
-}
+
 
 private const val METROLIST_AUTO_SCROLL_DURATION = 1500L // Much slower auto-scroll for smooth transitions
 private const val METROLIST_INITIAL_SCROLL_DURATION = 1000L // Slower initial positioning
