@@ -1667,7 +1667,7 @@ fun Lyrics(
                 }
             )
         }
-        }
+    }
 
     if (showImageCustomizationDialog && shareDialogData != null) {
         val lyricsText = shareDialogData!!.component1()
